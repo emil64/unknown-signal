@@ -38,6 +38,9 @@ def least_squares_poly(x, y, g):
 def solve(x, y):
     c_min = np.zeros(len(x))
     error = 1000000000
+
+    # TODO Cross Validation
+
     for i in range(1, 10):
         c = least_squares_poly(x, y, 4)
         if calc_error(y, calc_y_hat_poly(c, x)) < error:
