@@ -18,6 +18,9 @@ def solve_poly(x, y):
     # print(x, y, v)
 '''
 
+# def least_squares_sin(x, y):
+
+# def least_squares_exp(x, y):
 
 def least_squares_poly(x, y, g):
     x = x.reshape((len(x), 1))
@@ -41,44 +44,44 @@ def solve(x, y):
 
     # TODO Cross Validation
 
-    for i in range(1, 10):
-        c = least_squares_poly(x, y, 4)
+    for i in range(2, 21):
+        c = least_squares_poly(x, y, i)
         if calc_error(y, calc_y_hat_poly(c, x)) < error:
             error = calc_error(y, calc_y_hat_poly(c, x))
             c_min = c
     plot_poly(c_min, x)
-    return calc_error(y, calc_y_hat_poly(c_min, x))
+    return error
 
 
 def plot_poly(a, x):
     g = len(a)
+    print(g)
     x_new = np.linspace(x.min(), x.max(), 1000)
     y_new = np.zeros(len(x_new))
     for i in range(0, g):
         y_new += (a[i] * (x_new ** i))
     ax.plot(x_new, y_new, '-r')
+    # ax.scatter(x, calc_y_hat_poly(a, x), c='b', s=10)
 
 
 def calc_y_hat_poly(a, x):
-    g = len(a)
-    y_hat = np.zeros(len(x))
-    for i in range(0, g):
-        y_hat += (a[i] * (x ** i))
-    return y_hat
+    return np.polyval(np.flip(a), x)
 
 
 def calc_error(y, y_hat):
-    return np.sum((y_hat - y) ** 2)
+    return np.sum((y - y_hat) ** 2)
 
 
 def split_data(x, y):
     s = 0
     for i in range(0, len(xs), 20):
-        s += solve(x[i:i + 20], y[i:i + 20])
+        e = solve(x[i:i + 20], y[i:i + 20])
+        print(e)
+        s += e
     print(s)
 
 
 fig, ax = plt.subplots()
-xs, ys = u.load_points_from_file('train_data/noise_2.csv')
+xs, ys = u.load_points_from_file('train_data/adv_3.csv')
 split_data(xs, ys)
 u.view_data_segments(xs, ys)
