@@ -19,6 +19,7 @@ class Function:
         self.y = y
         self.error = 0
         self.a = np.zeros(len(self.x))
+        self.solve()
 
     def solve(self):
         return self.error
@@ -103,11 +104,40 @@ class Sine(Function):
         ax.plot(x_new, y_new, '-b')
 
 
+class Cosine(Function):
+
+    def solve(self):
+        self.a = self.least_squares(self.x, self.y)
+        self.error = calc_error(self.y, self.calc_y_hat(self.a, self.x))
+        return self.error
+
+    @staticmethod
+    def least_squares(x, y):
+        x = x.reshape((len(x), 1))
+        x_ = np.ones((len(x), 2))
+
+        x_copy = np.cos(x)
+        x_[:, 1] = x_copy[:, 0]
+
+        xt = np.transpose(x_)
+        a = np.dot(np.dot(np.linalg.inv(np.dot(xt, x_)), xt), y)
+        return a
+
+    @staticmethod
+    def calc_y_hat(a, x):
+        return a[0] + a[1] * np.cos(x)
+
+    def plot(self):
+        x_new = np.linspace(self.x.min(), self.x.max(), 1000)
+        y_new = self.calc_y_hat(self.a, x_new)
+        ax.plot(x_new, y_new, '-b')
+
+
 class Exp(Function):
 
-    def solve_exp(self):
+    def solve(self):
         self.a = self.least_squares(self.x, self.y)
-        return calc_error(self.y, self.calc_y_hat(self.a, self.x))
+        self.error = calc_error(self.y, self.calc_y_hat(self.a, self.x))
 
     @staticmethod
     def least_squares(x, y):
@@ -123,7 +153,41 @@ class Exp(Function):
 
     @staticmethod
     def calc_y_hat(a, x):
-        return a[0] + a[1] * np.sin(x)
+        return a[0] + a[1] * np.exp(x)
+
+    def plot(self):
+        x_new = np.linspace(self.x.min(), self.x.max(), 1000)
+        y_new = self.calc_y_hat(self.a, x_new)
+        ax.plot(x_new, y_new, '-y')
+
+
+class Log(Function):
+
+    def solve(self):
+
+        for a in self.x:
+            if a<=0:
+                self.error = 1000000000
+                break
+        else:
+            self.a = self.least_squares(self.x, self.y)
+            self.error = calc_error(self.y, self.calc_y_hat(self.a, self.x))
+
+    @staticmethod
+    def least_squares(x, y):
+        x = x.reshape((len(x), 1))
+        x_ = np.ones((len(x), 2))
+
+        x_copy = np.log(x)
+        x_[:, 1] = x_copy[:, 0]
+
+        xt = np.transpose(x_)
+        a = np.dot(np.dot(np.linalg.inv(np.dot(xt, x_)), xt), y)
+        return a
+
+    @staticmethod
+    def calc_y_hat(a, x):
+        return a[0] + a[1] * np.log(x)
 
     def plot(self):
         x_new = np.linspace(self.x.min(), self.x.max(), 1000)
@@ -132,23 +196,24 @@ class Exp(Function):
 
 
 def solve(x, y):
+
     poly = Poly(x, y)
-    poly.solve()
-
     sin = Sine(x, y)
-    error_sin = sin.solve()
-
+    cos = Cosine(x, y)
     exp = Exp(x, y)
-    error_exp = exp.solve_exp()
+    log = Log(x, y)
 
-    threshold = 25
+    threshold = 30
 
     min_f = poly
-    if error_sin < min_f.error and abs(error_sin - min_f.error) > threshold:
-        print(abs(error_sin - min_f.error))
+    if sin.error < min_f.error and abs(sin.error - min_f.error) > threshold:
         min_f = sin
-    elif error_exp < min_f.error and abs(error_exp - min_f.error) > threshold:
+    if cos.error < min_f.error and abs(cos.error - min_f.error) > threshold:
+        min_f = cos
+    if exp.error < min_f.error and abs(exp.error - min_f.error) > threshold:
         min_f = exp
+    if log.error < min_f.error and abs(log.error - min_f.error) > threshold:
+        min_f = log
 
     error = min_f.error
     min_f.plot()
@@ -174,4 +239,3 @@ xs, ys = u.load_points_from_file('train_data/adv_3.csv')
 split_data(xs, ys)
 u.view_data_segments(xs, ys)
 
-# todo implement cos, log
