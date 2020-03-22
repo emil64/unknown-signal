@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+import sys
 import utilities as u
 import numpy as np
 from matplotlib import pyplot as plt
@@ -6,10 +9,21 @@ from matplotlib import pyplot as plt
 def split_train_test(x_, y_):
     x = x_
     y = y_
-    vx = np.array([x[0], x[4], x[9], x[14], x[19]])
-    vy = np.array([y[0], y[4], y[9], y[14], y[19]])
-    nx = np.delete(x, [0, 4, 9, 14, 19])
-    ny = np.delete(y, [0, 4, 9, 14, 19])
+    vx = np.array([x[0], x[10], x[19]])
+    vy = np.array([y[0], y[10], y[19]])
+    nx = np.delete(x, [0, 10, 19])
+    ny = np.delete(y, [0, 10, 19])
+
+    # vx = np.array([x[0], x[4], x[9], x[14], x[19]])
+    # vy = np.array([y[0], y[4], y[9], y[14], y[19]])
+    # nx = np.delete(x, [0, 4, 9, 14, 19])
+    # ny = np.delete(y, [0, 4, 9, 14, 19])
+
+    # nx = x
+    # ny = y
+    # vx = np.array([])
+    # vy = np.array([])
+
     return nx, ny, vx, vy
 
 
@@ -33,11 +47,12 @@ class Poly(Function):
     def solve(self):
         (nx, ny, vx, vy) = split_train_test(self.x, self.y)
         error = 10000000000001
+        threshold = 1.2
         c_min = np.zeros(len(self.x))
-        for i in range(2, len(nx) + 1):
+        for i in range(2, 7):
             c = self.least_squares(nx, ny, i)
-            if calc_error(vy, self.calc_y_hat(c, vx)) < error:
-                error = calc_error(vy, self.calc_y_hat(c, vx))
+            if calc_error(self.y, self.calc_y_hat(c, self.x))*threshold < error:
+                error = calc_error(self.y, self.calc_y_hat(c, self.x))
                 c_min = c
         # plot_poly(c_min, x)
         self.a = c_min
@@ -66,7 +81,8 @@ class Poly(Function):
 
     def plot(self):
         g = len(self.a)
-        print(g - 1)
+        # print(g - 1)
+        # print(self.a)
         x_new = np.linspace(self.x.min(), self.x.max(), 1000)
         y_new = np.zeros(len(x_new))
         for i in range(0, g):
@@ -166,7 +182,7 @@ class Log(Function):
     def solve(self):
 
         for a in self.x:
-            if a<=0:
+            if a <= 0:
                 self.error = 1000000000
                 break
         else:
@@ -196,26 +212,32 @@ class Log(Function):
 
 
 def solve(x, y):
-
     poly = Poly(x, y)
     sin = Sine(x, y)
     cos = Cosine(x, y)
     exp = Exp(x, y)
     log = Log(x, y)
 
-    threshold = 30
+    threshold = 0.15
 
     min_f = poly
-    if sin.error < min_f.error and abs(sin.error - min_f.error) > threshold:
+
+    if len(poly.a) > 4:
+        threshold = 0
+    if sin.error < min_f.error and abs(sin.error - min_f.error) > threshold*min_f.error:
         min_f = sin
-    if cos.error < min_f.error and abs(cos.error - min_f.error) > threshold:
+
+    if cos.error < min_f.error and abs(cos.error - min_f.error) > threshold*min_f.error:
         min_f = cos
-    if exp.error < min_f.error and abs(exp.error - min_f.error) > threshold:
+
+    if exp.error < min_f.error and abs(exp.error - min_f.error) > threshold*min_f.error:
         min_f = exp
-    if log.error < min_f.error and abs(log.error - min_f.error) > threshold:
+
+    if log.error < min_f.error and abs(log.error - min_f.error) > threshold*min_f.error:
         min_f = log
 
     error = min_f.error
+
     min_f.plot()
 
     return error
@@ -229,13 +251,14 @@ def split_data(x, y):
     s = 0
     for i in range(0, len(xs), 20):
         e = solve(x[i:i + 20], y[i:i + 20])
-        print(e)
+        # print(e)
         s += e
     print(s)
 
 
 fig, ax = plt.subplots()
-xs, ys = u.load_points_from_file('train_data/adv_3.csv')
+file = sys.argv[1]
+xs, ys = u.load_points_from_file(file)
 split_data(xs, ys)
-u.view_data_segments(xs, ys)
-
+if len(sys.argv) > 2 and sys.argv[2] == '--plot':
+    u.view_data_segments(xs, ys)
