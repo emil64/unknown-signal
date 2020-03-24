@@ -87,7 +87,7 @@ class Poly(Function):
         y_new = np.zeros(len(x_new))
         for i in range(0, g):
             y_new += (self.a[i] * (x_new ** i))
-        ax.plot(x_new, y_new, '-r')
+        ax.plot(x_new, y_new, '-r', label="Ploynomial")
         # ax.scatter(x, calc_y_hat_poly(a, x), c='b', s=10)
 
 
@@ -262,3 +262,5 @@ xs, ys = u.load_points_from_file(file)
 split_data(xs, ys)
 if len(sys.argv) > 2 and sys.argv[2] == '--plot':
     u.view_data_segments(xs, ys)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.show()
