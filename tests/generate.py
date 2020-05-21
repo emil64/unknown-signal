@@ -44,7 +44,7 @@ def log(p, noise, offset):
 
 
 def noise1():
-    x_poly, y_poly = poly(np.array([2, 0, 1]), 0.5, -5)
+    x_poly, y_poly = poly(np.array([2, 0, 1]), 0.8, -5)
     x_sin, y_sin = sin(np.array([2, 5]), 0.5, 5)
     x = np.append(x_poly, x_sin)
     y = np.append(y_poly, y_sin)
